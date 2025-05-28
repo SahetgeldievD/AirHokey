@@ -1,0 +1,23 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+
+:root {
+  --border-dark: #151B54;
+  --border-light: #1589FF;
+  --circle-1-fill: #F87217;
+  --circle-1-stroke: #9F000F;
+  --circle-2-fill: #ffdc00;
+  --circle-2-stroke: #9F000F;
+  --circle-default-fill: #151B54;
+  --circle-default-stroke: #000;
+  --center-line: #000;
+  --score-color: #000;
+}
+
+canvas {
+  background: #eee;
+  display: block;
+  margin: 0px auto;
+}
