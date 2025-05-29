@@ -106,6 +106,11 @@ function draw_board() {
   ctx.lineTo(330, 630);
   ctx.stroke();
   ctx.closePath();
+
+    ctx.font = "50px Arial";
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--score-color');
+    ctx.fillText(com_score, 440, 300);
+    ctx.fillText(player_score, 440, 380);
 }
 
 // Функция вычисления расстояния между двумя точками
@@ -153,6 +158,7 @@ function play() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   draw_board();
   draw_filled_circle(pMallet.x, pMallet.y, pMallet.radius, 1);
+  draw_filled_circle(cMallet.x, cMallet.y, cMallet.radius, 2);
   draw_filled_circle(ball.x, ball.y, ball.radius, 0);
 
   // Отскок шайбы от боковых стен
@@ -181,6 +187,31 @@ function play() {
     }
   }
 
+  // ИИ соперника
+  let ed = false; // сложность
+  let er = 1;
+  let p2s;
+  if (ed) er = 5;
+
+  if ((Math.abs(xspeed) + Math.abs(yspeed)) < 10 && ball.y <= canvas.height / 2) {
+    if (ball.y - 20 > cMallet.y) cMallet.y += 2;
+    else cMallet.y -= 2;
+  } else if (cMallet.y > 100) cMallet.y -= 2;
+  else if (cMallet.y < 100) cMallet.y += 2;
+
+  if (cMallet.x < x_min) cMallet.x = x_min + 30;
+  if (cMallet.x > x_max) cMallet.x = x_max + 30;
+  if (cMallet.y < y_min) cMallet.y = y_min + 60;
+  if (cMallet.y > y_max) cMallet.y = y_max;
+
+  p2s = !ed ? 2 : 3;
+
+  if (ball.y < cMallet.y && ball.x > cMallet.x - 30 && ball.x < cMallet.x + 30)
+    p2s = -2;
+
+  if (cMallet.x < ball.x + er) cMallet.x += p2s;
+  if (cMallet.x > ball.x - er) cMallet.x -= p2s;
+
   // Удар по шайбе игроком
   let pDist = distance(pMallet.x, pMallet.y, ball.x, ball.y);
   if (pDist < 45) {
@@ -188,6 +219,15 @@ function play() {
     let dy = (ball.y - pMallet.y) / 30;
     xspeed = dx * ball_speed;
     yspeed = dy * ball_speed;
+  }
+
+  // Удар по шайбе компьютером
+  let cDist = distance(cMallet.x, cMallet.y, ball.x, ball.y);
+  if (cDist < 45) {
+    let cdx = (ball.x - cMallet.x) / 45;
+    let cdy = (ball.y - cMallet.y) / 45;
+    xspeed = cdx * ball_speed;
+    yspeed = cdy * ball_speed;
   }
 
   // Обновление позиции шайбы
