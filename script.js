@@ -12,6 +12,8 @@ let x_max = 460;
 let y_min = 30;
 let y_max = 600;
 
+document.addEventListener("mousemove", mouseMoveHandler, false);
+
 function draw_rect(x, y, w, h, b) {
   ctx.beginPath();
   ctx.strokeStyle = getComputedStyle(document.documentElement)
@@ -67,6 +69,13 @@ function get_circle_styles(d) {
   };
 }
 
+function mouseMoveHandler(e) {
+  const relativeX = e.clientX - canvas.offsetLeft;
+  const relativeY = e.clientY - canvas.offsetTop;
+
+  if (relativeX > 60 && relativeX < canvas.width - 60) pMallet.x = relativeX;
+  if (relativeY > 0 && relativeY < 600) pMallet.y = relativeY;
+}
 
 function draw_board() {
   draw_rect(0, 0, 520, 660, 1);
@@ -97,11 +106,96 @@ function draw_board() {
   ctx.lineTo(330, 630);
   ctx.stroke();
   ctx.closePath();
-
-    ctx.font = "50px Arial";
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--score-color');
-    ctx.fillText(com_score, 440, 300);
-    ctx.fillText(player_score, 440, 380);
 }
 
-draw_board();
+// Функция вычисления расстояния между двумя точками
+function distance(x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Класс кия
+const Mallet = function(x, y, r) {
+  this.x = x;
+  this.y = y;
+  this.radius = r;
+}
+
+// Кий игрока
+let pMallet = new Mallet(260, canvas.height - 100, 30);
+// Кий компьютера
+let cMallet = new Mallet(260, 100, 30);
+
+// Класс шайбы
+const Ball = function(x, y, r) {
+  this.x = x;
+  this.y = y;
+  this.radius = r;
+}
+
+// Шайба
+let ball = new Ball(canvas.width / 2, canvas.height - 200, 15);
+
+// Управление кием игрока через мышь
+function mouseMoveHandler(e) {
+  let relativeX = e.clientX - canvas.offsetLeft;
+  let relativeY = e.clientY - canvas.offsetTop;
+
+  if (relativeX > 60 && relativeX < canvas.width - 60)
+    pMallet.x = relativeX;
+  if (relativeY > 330 && relativeY < 600)
+    pMallet.y = relativeY;
+}
+
+// Главная функция отрисовки и логики
+function play() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  draw_board();
+  draw_filled_circle(pMallet.x, pMallet.y, pMallet.radius, 1);
+  draw_filled_circle(ball.x, ball.y, ball.radius, 0);
+
+  // Отскок шайбы от боковых стен
+  if (ball.x + xspeed > canvas.width - ball.radius - 30 || ball.x + xspeed < ball.radius + 30) {
+    xspeed *= -1;
+  }
+
+  // Отскок шайбы от верхней/нижней стен и логика голов
+  if (ball.x > 190 && ball.x < 330) {
+    if (ball.y + yspeed > canvas.height + ball.radius - 30) {
+      ball.x = canvas.width / 2;
+      ball.y = canvas.height / 2 + 100;
+      xspeed = 0;
+      yspeed = 0;
+      com_score++;
+    } else if (ball.y + yspeed < 30 - ball.radius) {
+      ball.x = canvas.width / 2;
+      ball.y = canvas.height / 2 - 100;
+      xspeed = 0;
+      yspeed = 0;
+      player_score++;
+    }
+  } else {
+    if (ball.y + yspeed > canvas.height - ball.radius - 30 || ball.y + yspeed < 30 + ball.radius) {
+      yspeed *= -1;
+    }
+  }
+
+  // Удар по шайбе игроком
+  let pDist = distance(pMallet.x, pMallet.y, ball.x, ball.y);
+  if (pDist < 45) {
+    let dx = (ball.x - pMallet.x) / 30;
+    let dy = (ball.y - pMallet.y) / 30;
+    xspeed = dx * ball_speed;
+    yspeed = dy * ball_speed;
+  }
+
+  // Обновление позиции шайбы
+  ball.x += xspeed;
+  ball.y += yspeed;
+  xspeed *= 0.99;
+  yspeed *= 0.99;
+}
+
+// Запуск игры
+setInterval(play, 10);
